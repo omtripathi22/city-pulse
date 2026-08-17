@@ -1,0 +1,40 @@
+{
+  "name": "Starter 3x3 Grid",
+  "intersections": [
+    { "id": "I1", "x": 140, "y": 120 },
+    { "id": "I2", "x": 400, "y": 120 },
+    { "id": "I3", "x": 660, "y": 120 },
+    { "id": "I4", "x": 140, "y": 360 },
+    { "id": "I5", "x": 400, "y": 360 },
+    { "id": "I6", "x": 660, "y": 360 },
+    { "id": "I7", "x": 140, "y": 600 },
+    { "id": "I8", "x": 400, "y": 600 },
+    { "id": "I9", "x": 660, "y": 600 }
+  ],
+  "roads": [
+    { "id": "R01", "from": "I1", "to": "I2", "lengthMeters": 260, "speedLimitKmph": 40, "lanes": 2, "capacity": 28 },
+    { "id": "R02", "from": "I2", "to": "I1", "lengthMeters": 260, "speedLimitKmph": 40, "lanes": 2, "capacity": 28 },
+    { "id": "R03", "from": "I2", "to": "I3", "lengthMeters": 260, "speedLimitKmph": 35, "lanes": 2, "capacity": 24 },
+    { "id": "R04", "from": "I3", "to": "I2", "lengthMeters": 260, "speedLimitKmph": 35, "lanes": 2, "capacity": 24 },
+    { "id": "R05", "from": "I4", "to": "I5", "lengthMeters": 260, "speedLimitKmph": 40, "lanes": 2, "capacity": 28 },
+    { "id": "R06", "from": "I5", "to": "I4", "lengthMeters": 260, "speedLimitKmph": 40, "lanes": 2, "capacity": 28 },
+    { "id": "R07", "from": "I5", "to": "I6", "lengthMeters": 260, "speedLimitKmph": 30, "lanes": 1, "capacity": 16 },
+    { "id": "R08", "from": "I6", "to": "I5", "lengthMeters": 260, "speedLimitKmph": 30, "lanes": 1, "capacity": 16 },
+    { "id": "R09", "from": "I7", "to": "I8", "lengthMeters": 260, "speedLimitKmph": 35, "lanes": 2, "capacity": 24 },
+    { "id": "R10", "from": "I8", "to": "I7", "lengthMeters": 260, "speedLimitKmph": 35, "lanes": 2, "capacity": 24 },
+    { "id": "R11", "from": "I8", "to": "I9", "lengthMeters": 260, "speedLimitKmph": 40, "lanes": 2, "capacity": 28 },
+    { "id": "R12", "from": "I9", "to": "I8", "lengthMeters": 260, "speedLimitKmph": 40, "lanes": 2, "capacity": 28 },
+    { "id": "R13", "from": "I1", "to": "I4", "lengthMeters": 240, "speedLimitKmph": 35, "lanes": 2, "capacity": 24 },
+    { "id": "R14", "from": "I4", "to": "I1", "lengthMeters": 240, "speedLimitKmph": 35, "lanes": 2, "capacity": 24 },
+    { "id": "R15", "from": "I2", "to": "I5", "lengthMeters": 240, "speedLimitKmph": 30, "lanes": 1, "capacity": 16 },
+    { "id": "R16", "from": "I5", "to": "I2", "lengthMeters": 240, "speedLimitKmph": 30, "lanes": 1, "capacity": 16 },
+    { "id": "R17", "from": "I3", "to": "I6", "lengthMeters": 240, "speedLimitKmph": 35, "lanes": 2, "capacity": 24 },
+    { "id": "R18", "from": "I6", "to": "I3", "lengthMeters": 240, "speedLimitKmph": 35, "lanes": 2, "capacity": 24 },
+    { "id": "R19", "from": "I4", "to": "I7", "lengthMeters": 240, "speedLimitKmph": 40, "lanes": 2, "capacity": 28 },
+    { "id": "R20", "from": "I7", "to": "I4", "lengthMeters": 240, "speedLimitKmph": 40, "lanes": 2, "capacity": 28 },
+    { "id": "R21", "from": "I5", "to": "I8", "lengthMeters": 240, "speedLimitKmph": 30, "lanes": 1, "capacity": 16 },
+    { "id": "R22", "from": "I8", "to": "I5", "lengthMeters": 240, "speedLimitKmph": 30, "lanes": 1, "capacity": 16 },
+    { "id": "R23", "from": "I6", "to": "I9", "lengthMeters": 240, "speedLimitKmph": 35, "lanes": 2, "capacity": 24 },
+    { "id": "R24", "from": "I9", "to": "I6", "lengthMeters": 240, "speedLimitKmph": 35, "lanes": 2, "capacity": 24 }
+  ]
+}

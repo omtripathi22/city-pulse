@@ -1,0 +1,113 @@
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException, Query
+
+from app.graph import RoadNetwork
+from app.models import NetworkValidationError
+from app.routing import RouteNotFoundError, find_shortest_route
+from app.simulation import TrafficSimulation
+
+
+DATA_DIRECTORY = Path(__file__).resolve().parents[1] / "data"
+CITY_MAP_PATH = DATA_DIRECTORY / "city-map.json"
+
+# I load the starter network once because it is static until the map-editing stage.
+road_network = RoadNetwork.from_json_file(CITY_MAP_PATH)
+traffic_simulation = TrafficSimulation(road_network)
+
+
+app = FastAPI(
+    title="Traffic Flow Optimization System",
+    version="0.1.0",
+    description="API foundation for the traffic-flow simulation and dashboard.",
+)
+
+
+@app.get("/health", tags=["system"])
+def health_check() -> dict[str, str]:
+    """Return a small status response so I can confirm the API is running."""
+    return {"status": "ok", "service": "traffic-flow-api"}
+
+
+@app.get("/network/summary", tags=["network"])
+def network_summary() -> dict[str, int]:
+    """Report the loaded map size without exposing simulation internals yet."""
+    return {
+        "intersections": road_network.intersection_count,
+        "roads": road_network.road_count,
+    }
+
+
+@app.get("/routes", tags=["routing"])
+def route_between_intersections(
+    source: str = Query(..., min_length=1, description="Starting intersection id."),
+    destination: str = Query(..., min_length=1, description="Target intersection id."),
+) -> dict[str, str | float | list[str]]:
+    """Calculate a shortest free-flow route for the requested pair of junctions."""
+    try:
+        return find_shortest_route(road_network, source, destination).as_dict()
+    except RouteNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except NetworkValidationError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@app.get("/simulation/state", tags=["simulation"])
+def simulation_state() -> dict[str, object]:
+    """Return the current signals, vehicles, and time without advancing the model."""
+    return traffic_simulation.snapshot()
+
+
+@app.post("/simulation/vehicles", status_code=201, tags=["simulation"])
+def create_vehicle(
+    source: str = Query(..., min_length=1, description="Starting intersection id."),
+    destination: str = Query(..., min_length=1, description="Target intersection id."),
+    vehicle_id: str | None = Query(
+        default=None,
+        min_length=1,
+        description="Optional unique vehicle id; generated when omitted.",
+    ),
+) -> dict[str, str | float | int | None]:
+    """Add one vehicle with a shortest route, ready for subsequent simulation ticks."""
+    try:
+        new_vehicle_id = vehicle_id or _next_vehicle_id()
+        return traffic_simulation.add_vehicle(
+            new_vehicle_id, source, destination
+        ).as_dict()
+    except RouteNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except NetworkValidationError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@app.post("/simulation/step", tags=["simulation"])
+def step_simulation(
+    seconds: int = Query(
+        default=1,
+        ge=1,
+        le=3_600,
+        description="Whole seconds to simulate in this request.",
+    ),
+) -> dict[str, object]:
+    """Advance fixed-time signals and every simulated vehicle by whole seconds."""
+    try:
+        traffic_simulation.advance(seconds)
+        return traffic_simulation.snapshot()
+    except NetworkValidationError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@app.post("/simulation/reset", tags=["simulation"])
+def reset_simulation() -> dict[str, object]:
+    """Clear vehicles and restore every signal to its initial fixed-time phase."""
+    global traffic_simulation
+    traffic_simulation = TrafficSimulation(road_network)
+    return traffic_simulation.snapshot()
+
+
+def _next_vehicle_id() -> str:
+    """Generate a readable id without colliding with a caller-provided vehicle id."""
+    number = 1
+    while f"vehicle-{number}" in traffic_simulation.vehicles:
+        number += 1
+    return f"vehicle-{number}"
