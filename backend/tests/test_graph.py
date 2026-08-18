@@ -33,6 +33,14 @@ class RoadNetworkTests(unittest.TestCase):
         with self.assertRaises(NetworkValidationError):
             self.network.outgoing_roads("missing")
 
+    def test_network_serializes_for_the_dashboard(self) -> None:
+        """Keep the browser map contract aligned with the validated graph data."""
+        map_data = self.network.as_dict()
+
+        self.assertEqual(map_data["intersections"][0]["id"], "I1")
+        self.assertEqual(map_data["roads"][0]["from"], "I1")
+        self.assertEqual(map_data["roads"][0]["to"], "I2")
+
     def test_base_travel_time_uses_road_speed(self) -> None:
         """Verify the free-flow cost that Dijkstra will consume in the next step."""
         road = Road(

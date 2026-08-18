@@ -87,6 +87,15 @@ class RoadNetwork:
         self.get_intersection(intersection_id)
         return self._outgoing_roads[intersection_id]
 
+    def as_dict(self) -> dict[str, list[dict[str, str | float | int]]]:
+        """Return the static graph data that the visualization needs to render a map."""
+        return {
+            "intersections": [
+                intersection.as_dict() for intersection in self._intersections.values()
+            ],
+            "roads": [road.as_dict() for road in self._roads.values()],
+        }
+
     def _index_intersections(
         self, intersections: Iterable[Intersection]
     ) -> dict[str, Intersection]:

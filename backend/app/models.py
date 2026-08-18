@@ -26,6 +26,10 @@ class Intersection:
         if not self.id.strip():
             raise NetworkValidationError("An intersection id cannot be empty.")
 
+    def as_dict(self) -> dict[str, str | float]:
+        """Return the coordinates in the compact shape used by the map canvas."""
+        return {"id": self.id, "x": self.x, "y": self.y}
+
 
 @dataclass(frozen=True, slots=True)
 class Road:
@@ -71,3 +75,15 @@ class Road:
         """Return free-flow travel time before congestion penalties are applied."""
         speed_meters_per_second = self.speed_limit_kmph / 3.6
         return self.length_meters / speed_meters_per_second
+
+    def as_dict(self) -> dict[str, str | float | int]:
+        """Return public road details without exposing the dataclass implementation."""
+        return {
+            "id": self.id,
+            "from": self.source_id,
+            "to": self.destination_id,
+            "lengthMeters": self.length_meters,
+            "speedLimitKmph": self.speed_limit_kmph,
+            "lanes": self.lanes,
+            "capacity": self.capacity,
+        }
