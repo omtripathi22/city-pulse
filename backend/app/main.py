@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.graph import RoadNetwork
 from app.models import NetworkValidationError
+from app.native_engine import native_core_status, shadow_validate_tick
 from app.routing import RouteNotFoundError, find_shortest_route
 from app.signals import SignalStrategy
 from app.simulation import TrafficSimulation, compare_signal_strategies
@@ -13,9 +14,20 @@ from app.simulation import TrafficSimulation, compare_signal_strategies
 DATA_DIRECTORY = Path(__file__).resolve().parents[1] / "data"
 CITY_MAP_PATH = DATA_DIRECTORY / "city-map.json"
 
+
+def _load_road_network() -> RoadNetwork:
+    """Load the static starter map that powers the current simulation stages."""
+    return RoadNetwork.from_json_file(CITY_MAP_PATH)
+
+
+def _create_simulation(strategy: SignalStrategy = SignalStrategy.FIXED) -> TrafficSimulation:
+    """Build a fresh simulation around the shared city map."""
+    return TrafficSimulation(road_network, signal_strategy=strategy)
+
+
 # I load the starter network once because it is static until the map-editing stage.
-road_network = RoadNetwork.from_json_file(CITY_MAP_PATH)
-traffic_simulation = TrafficSimulation(road_network)
+road_network = _load_road_network()
+traffic_simulation = _create_simulation()
 
 
 app = FastAPI(
@@ -37,6 +49,12 @@ app.add_middleware(
 def health_check() -> dict[str, str]:
     """Return a small status response so I can confirm the API is running."""
     return {"status": "ok", "service": "traffic-flow-api"}
+
+
+@app.get("/system/native-core", tags=["system"])
+def native_core_health() -> dict[str, str | bool]:
+    """Report native-core availability without changing simulation behavior."""
+    return native_core_status()
 
 
 @app.get("/network/summary", tags=["network"])
@@ -112,7 +130,11 @@ def step_simulation(
     """Advance fixed-time signals and every simulated vehicle by whole seconds."""
     try:
         traffic_simulation.advance(seconds)
-        return traffic_simulation.snapshot()
+        snapshot = traffic_simulation.snapshot()
+        # I validate native output in shadow mode until all simulation rules are
+        # implemented there; the established Python response stays authoritative.
+        shadow_validate_tick(snapshot, seconds)
+        return snapshot
     except NetworkValidationError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
 
@@ -121,10 +143,7 @@ def step_simulation(
 def reset_simulation() -> dict[str, object]:
     """Clear vehicles and restore every signal to its initial fixed-time phase."""
     global traffic_simulation
-    traffic_simulation = TrafficSimulation(
-        road_network,
-        signal_strategy=traffic_simulation.signal_strategy,
-    )
+    traffic_simulation = _create_simulation(traffic_simulation.signal_strategy)
     return traffic_simulation.snapshot()
 
 
@@ -136,7 +155,7 @@ def set_signal_strategy(
 ) -> dict[str, object]:
     """Select a signal policy and reset state so both strategies start fairly."""
     global traffic_simulation
-    traffic_simulation = TrafficSimulation(road_network, signal_strategy=strategy)
+    traffic_simulation = _create_simulation(strategy)
     return traffic_simulation.snapshot()
 
 

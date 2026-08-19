@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from app.graph import RoadNetwork
 from app.models import NetworkValidationError, Road
+from app.native_bridge import find_shortest_route_native
 
 
 class RouteNotFoundError(NetworkValidationError):
@@ -64,6 +65,11 @@ def find_shortest_route(
             intersection_ids=(source_id,),
             total_travel_time_seconds=0.0,
         )
+
+    if road_cost is None:
+        native_route = find_shortest_route_native(network, source_id, destination_id)
+        if native_route is not None:
+            return native_route
 
     calculate_cost = road_cost or _free_flow_cost
     distances: dict[str, float] = {source_id: 0.0}

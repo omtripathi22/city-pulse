@@ -9,12 +9,37 @@ backend/   FastAPI service and traffic-simulation engine
 frontend/  React dashboard for the road-network visualization
 ```
 
+## Optional native C++ core
+
+The routing bridge can load the C++17 core from `backend/native`. Build it
+with a 64-bit CMake generator:
+
+```powershell
+cmake -S backend/native -B backend/native/build -A x64
+cmake --build backend/native/build --config Release
+```
+
+Or run the repeatable helper:
+
+```powershell
+& .\backend\native\build-native.ps1
+```
+
+The Python bridge keeps the existing Python routing implementation as a
+fallback when the native DLL is unavailable or built for the wrong
+architecture.
+
 ## Current status
 
-Steps 1–8 are complete: the project now has a validated city graph, Dijkstra
-routing, fixed and queue-adaptive traffic signals, capacity-limited queues,
+The MVP is complete: the project has a validated city graph, Dijkstra routing,
+fixed and queue-adaptive traffic signals, capacity-limited queues,
 congestion-aware route costs, emergency priority, accident closures, metrics,
 and a live React dashboard with a Canvas city map.
+
+The C++17 core is now integrated as an optional native routing and state
+contract. FastAPI continues to use the Python simulation as the authoritative
+engine while native results run in shadow-validation mode. This keeps the
+existing dashboard stable while the remaining domain rules are migrated.
 
 ## Starter city map
 
@@ -33,6 +58,8 @@ stage will account for live congestion without changing the core algorithm.
 ## Simulation API
 
 The starter engine exposes these controls in FastAPI's `/docs` page:
+
+- `GET /system/native-core` reports native DLL availability and runtime mode.
 
 - `POST /simulation/reset` clears all vehicles and restores signal cycles.
 - `POST /simulation/vehicles?source=I1&destination=I9` adds a vehicle.
