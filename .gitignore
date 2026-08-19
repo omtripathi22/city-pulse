@@ -7,8 +7,16 @@ __pycache__/
 frontend/node_modules/
 frontend/dist/
 
-# Environment and editor files
+# Environment
 .env
 .env.*
+
+# IDE
 .vscode/
 
+# Native C++ build artifacts
+*.dll
+*.so
+*.dylib
+build/
+cmake-build-*/
